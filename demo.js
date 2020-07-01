@@ -182,5 +182,31 @@ async function _analysisHtml(page){
 }
 
 
+function autoRequire(filepath){
+    let fp = filepath || __dirname;
+    fs.readdirSync(fp).filter(filename =>{
+        // 以下划线开头命名的文件及文件夹不进行require
+        let reg = /^_.*/;
+        // if(filepath){
+        //     console.log(filename)
+        // }
+        if(fp === __dirname){
+            return filename !== path.basename(__filename) && !reg.test(filename);
+        } else {
+            return !reg.test(filename);
+        }
+    }).forEach((e)=>{
+        let npath = path.resolve(fp,`./${e}`);
+        let stat = fs.lstatSync(npath);
+        if(stat.isDirectory()){
+            autoRequire(npath);
+        } else {
+            let sub = require(npath);
+            router.use(sub.default.routes());
+            router.use(sub.default.allowedMethods());
+        }
+    });
+}
+
 
 export default Qcc;
